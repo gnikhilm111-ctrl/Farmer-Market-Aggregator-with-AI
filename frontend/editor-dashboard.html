@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor Dashboard - KisanSetu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background: #f0f2f5; }
+        .header { background: linear-gradient(135deg, #1e3a2f 0%, #2d6a4f 100%); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .logo { font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+        .logout-btn { background: #d62828; padding: 8px 20px; border-radius: 25px; cursor: pointer; }
+        .container { max-width: 1600px; margin: 0 auto; padding: 2rem; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .stat-card { background: white; padding: 1.5rem; border-radius: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .stat-value { font-size: 2rem; font-weight: 800; color: #2d6a4f; }
+        .editor-panel { background: white; border-radius: 20px; padding: 2rem; margin-bottom: 2rem; }
+        .filters-bar { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .filter-select { padding: 10px; border: 2px solid #e0e0e0; border-radius: 10px; font-family: 'Poppins', sans-serif; flex: 1; min-width: 180px; }
+        .btn-primary { background: #2d6a4f; color: white; padding: 10px 20px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; }
+        .price-table { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e0e0e0; }
+        th { background: #f8f9fa; font-weight: 600; color: #1e3a2f; position: sticky; top: 0; }
+        .price-input { width: 120px; padding: 6px; border: 2px solid #e0e0e0; border-radius: 8px; font-family: 'Poppins', sans-serif; }
+        .btn-update { background: #2d6a4f; color: white; padding: 5px 12px; border: none; border-radius: 8px; cursor: pointer; font-size: 0.8rem; }
+        .btn-update:hover { background: #1e3a2f; }
+        .alert-success { background: #d4edda; color: #155724; padding: 12px; border-radius: 10px; margin-bottom: 1rem; display: none; }
+        .current-price { font-weight: 700; color: #d97706; }
+        .history-log { background: #f8f9fa; padding: 1rem; border-radius: 10px; margin-top: 1rem; max-height: 200px; overflow-y: auto; }
+        .history-item { padding: 6px; border-bottom: 1px solid #e0e0e0; font-size: 0.8rem; }
+        .loading { text-align: center; padding: 2rem; }
+        @media (max-width: 768px) { .container { padding: 1rem; } th, td { padding: 6px; font-size: 0.7rem; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo"><i class="fas fa-edit"></i><span>KisanSetu - Editor Dashboard</span></div>
+        <div class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</div>
+    </div>
+
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card"><i class="fas fa-chart-line" style="font-size: 2rem; color: #2d6a4f;"></i><div class="stat-value" id="totalMarkets">0</div><div>Total Mandis</div></div>
+            <div class="stat-card"><i class="fas fa-carrot" style="font-size: 2rem; color: #2d6a4f;"></i><div class="stat-value" id="totalCrops">16</div><div>Crop Varieties</div></div>
+            <div class="stat-card"><i class="fas fa-sync-alt" style="font-size: 2rem; color: #2d6a4f;"></i><div class="stat-value" id="updatesToday">0</div><div>Updates Today</div></div>
+        </div>
+
+        <div class="editor-panel">
+            <h2><i class="fas fa-dollar-sign"></i> Update Mandi Prices</h2>
+            <p style="color: #666; margin-bottom: 1rem;">Modify prices below - changes reflect instantly for farmers</p>
+            
+            <div class="alert-success" id="successAlert">
+                <i class="fas fa-check-circle"></i> Price updated successfully!
+            </div>
+
+            <div class="filters-bar">
+                <select id="stateFilter" class="filter-select">
+                    <option value="">All States</option>
+                </select>
+                <select id="cropFilter" class="filter-select">
+                    <option value="">All Crops</option>
+                </select>
+                <button class="btn-primary" onclick="loadPriceTable()"><i class="fas fa-filter"></i> Apply Filter</button>
+                <button class="btn-primary" onclick="loadPriceTable()" style="background: #6c757d;"><i class="fas fa-sync-alt"></i> Refresh</button>
+            </div>
+
+            <div class="price-table">
+                <table id="priceTable">
+                    <thead>
+                        <tr><th>State</th><th>Mandi</th><th>Crop</th><th>Current Price</th><th>New Price</th><th>Action</th></tr>
+                    </thead>
+                    <tbody id="priceTableBody"><tr><td colspan="6" class="loading"><i class="fas fa-spinner fa-spin"></i> Loading prices...</td></tr></tbody>
+                </table>
+            </div>
+
+            <div class="history-log">
+                <h4><i class="fas fa-history"></i> Recent Price Updates</h4>
+                <div id="updateHistory">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+        let allPriceData = [];
+        let updateCount = 0;
+
+        const statesList = [
+            "Uttar Pradesh", "Maharashtra", "Punjab", "Haryana", "Madhya Pradesh",
+            "Rajasthan", "Gujarat", "West Bengal", "Bihar", "Tamil Nadu",
+            "Karnataka", "Andhra Pradesh", "Telangana", "Odisha", "Assam"
+        ];
+
+        const cropsList = [
+            "wheat", "rice", "tomato", "onion", "potato", "chili", 
+            "brinjal", "cauliflower", "cabbage", "garlic", "ginger", 
+            "mango", "banana", "sugarcane", "cotton", "maize"
+        ];
+
+        const cropNames = {
+            wheat: "🌾 Wheat", rice: "🍚 Rice", tomato: "🍅 Tomato", onion: "🧅 Onion",
+            potato: "🥔 Potato", chili: "🌶️ Chili", brinjal: "🍆 Brinjal", cauliflower: "🥦 Cauliflower",
+            cabbage: "🥬 Cabbage", garlic: "🧄 Garlic", ginger: "🫚 Ginger", mango: "🥭 Mango",
+            banana: "🍌 Banana", sugarcane: "🎋 Sugarcane", cotton: "🌿 Cotton", maize: "🌽 Maize"
+        };
+
+        const mandisMap = {
+            "Uttar Pradesh": ["Lucknow Mandi", "Agra Mandi", "Varanasi Mandi", "Kanpur Mandi", "Bareilly Mandi"],
+            "Maharashtra": ["Mumbai APMC", "Nagpur Mandi", "Pune Mandi", "Nashik Mandi"],
+            "Punjab": ["Ludhiana Mandi", "Amritsar Mandi", "Jalandhar Mandi"],
+            "Haryana": ["Karnal Mandi", "Hisar Mandi"],
+            "Madhya Pradesh": ["Indore Mandi", "Bhopal Mandi"],
+            "Rajasthan": ["Jaipur Mandi", "Jodhpur Mandi"],
+            "Gujarat": ["Ahmedabad Mandi", "Surat Mandi"],
+            "West Bengal": ["Kolkata Mandi", "Howrah Mandi"],
+            "Bihar": ["Patna Mandi", "Gaya Mandi"],
+            "Tamil Nadu": ["Chennai Mandi", "Coimbatore Mandi"],
+            "Karnataka": ["Bangalore Mandi", "Mysore Mandi"],
+            "Andhra Pradesh": ["Vijayawada Mandi", "Visakhapatnam Mandi"],
+            "Telangana": ["Hyderabad Mandi", "Warangal Mandi"],
+            "Odisha": ["Bhubaneswar Mandi", "Cuttack Mandi"],
+            "Assam": ["Guwahati Mandi", "Jorhat Mandi"]
+        };
+
+        function loadDashboard() {
+            const userStr = localStorage.getItem('currentUser');
+            if (!userStr) { window.location.href = 'index.html'; return; }
+            
+            const stateFilter = document.getElementById('stateFilter');
+            stateFilter.innerHTML = '<option value="">All States</option>' + statesList.map(s => `<option value="${s}">${s}</option>`).join('');
+            
+            const cropFilter = document.getElementById('cropFilter');
+            cropFilter.innerHTML = '<option value="">All Crops</option>' + cropsList.map(c => `<option value="${c}">${cropNames[c]}</option>`).join('');
+            
+            loadPriceTable();
+            loadUpdateHistory();
+        }
+
+        async function loadPriceTable() {
+            const stateFilter = document.getElementById('stateFilter').value;
+            const cropFilter = document.getElementById('cropFilter').value;
+            
+            const tbody = document.getElementById('priceTableBody');
+            
+            if (!stateFilter || !cropFilter) {
+                tbody.innerHTML = '<tr><td colspan="6" class="loading" style="color:#d97706;"><i class="fas fa-filter"></i> Please select exactly one State and one Crop from the filters above to load prices. Pulling all national data simultaneously may exceed API limits.</td></tr>';
+                return;
+            }
+            
+            allPriceData = [];
+            tbody.innerHTML = '<tr><td colspan="6" class="loading"><i class="fas fa-spinner fa-spin"></i> Fetching live prices from backend...</td></tr>';
+            
+            let totalMarkets = 0;
+            let displayedCount = 0;
+            
+            // We only fetch for the selected state and crop (1 API call)
+            const mandis = mandisMap[stateFilter] || [`${stateFilter} Central Mandi`];
+            totalMarkets = mandis.length;
+            
+            try {
+                const response = await fetch(`${API_URL}/prices/${stateFilter}/${cropFilter}`);
+                const data = await response.json();
+                
+                for (const mandi of mandis) {
+                    let currentPrice = 1500;
+                    if (data.success && data.prices) {
+                        const priceData = data.prices.find(p => p.mandi === mandi);
+                        if (priceData) currentPrice = priceData.price;
+                    }
+                    
+                    allPriceData.push({ state: stateFilter, mandi, crop: cropFilter, currentPrice });
+                    displayedCount++;
+                }
+            } catch (error) {
+                console.error("Error fetching price:", error);
+            }
+            
+            // Re-render after gathering data
+            tbody.innerHTML = '';
+            for (let i = 0; i < allPriceData.length; i++) {
+                const p = allPriceData[i];
+                const row = tbody.insertRow();
+                row.insertCell(0).innerHTML = `<strong>${p.state}</strong>`;
+                row.insertCell(1).innerHTML = p.mandi;
+                row.insertCell(2).innerHTML = cropNames[p.crop];
+                row.insertCell(3).innerHTML = `<span class="current-price">₹${p.currentPrice.toLocaleString('en-IN')}</span>`;
+                row.insertCell(4).innerHTML = `<input type="number" class="price-input" id="price_${i}" value="${p.currentPrice}" min="300" max="10000">`;
+                row.insertCell(5).innerHTML = `<button class="btn-update" onclick="updatePrice(${i})"><i class="fas fa-save"></i> Update</button>`;
+            }
+            
+            document.getElementById('totalMarkets').innerText = totalMarkets;
+            document.getElementById('totalCrops').innerText = cropsList.length;
+        }
+
+        async function updatePrice(index) {
+            const data = allPriceData[index];
+            const newPriceInput = document.getElementById(`price_${index}`);
+            const newPrice = parseInt(newPriceInput.value);
+            
+            if (isNaN(newPrice) || newPrice < 300) {
+                alert("Please enter a valid price (minimum ₹300)");
+                return;
+            }
+            
+            try {
+                const user = JSON.parse(localStorage.getItem('currentUser'));
+                const response = await fetch(`${API_URL}/update-price`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        state: data.state,
+                        mandi: data.mandi,
+                        crop: data.crop,
+                        newPrice: newPrice,
+                        editorName: user.name
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    updateCount++;
+                    document.getElementById('updatesToday').innerText = updateCount;
+                    data.currentPrice = newPrice;
+                    
+                    const alertBox = document.getElementById('successAlert');
+                    alertBox.style.display = 'block';
+                    setTimeout(() => { alertBox.style.display = 'none'; }, 2000);
+                    
+                    loadPriceTable();
+                    loadUpdateHistory();
+                } else {
+                    alert("Update failed");
+                }
+            } catch (error) {
+                alert("Error updating price: " + error.message);
+            }
+        }
+
+        async function loadUpdateHistory() {
+            try {
+                const response = await fetch(`${API_URL}/history`);
+                const data = await response.json();
+                const historyDiv = document.getElementById('updateHistory');
+                
+                if (data.success && data.history.length > 0) {
+                    historyDiv.innerHTML = data.history.map(h => `
+                        <div class="history-item">
+                            <i class="fas fa-edit"></i> <strong>${h.mandi}</strong> (${h.state}) - ${cropNames[h.crop]}: 
+                            ₹${h.oldPrice} → ₹${h.newPrice}
+                            <br><small>${h.timestamp} by ${h.editor}</small>
+                        </div>
+                    `).join('');
+                } else {
+                    historyDiv.innerHTML = '<p style="color: #999;">No updates yet</p>';
+                }
+            } catch (error) {
+                document.getElementById('updateHistory').innerHTML = '<p style="color: #999;">Unable to load history</p>';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        }
+
+        loadDashboard();
+        setInterval(loadUpdateHistory, 5000);
+    </script>
+</body>
+</html>
