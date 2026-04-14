@@ -111,6 +111,7 @@ function initDatabase() {
             lastUpdated: new Date().toISOString(),
             editorApprovalList: []
         };
+        console.log("⚠️ Database created at:", DB_PATH);
         fs.writeFileSync(DB_PATH, JSON.stringify(initialData, null, 2));
     }
 }
@@ -119,7 +120,7 @@ function initDatabase() {
 
 app.post('/api/register', (req, res) => {
     const { name, email, mobile, district, password, role, adminCode, verificationCrop } = req.body;
-    const db = JSON.parse(fs.readFileSync(DB_PATH));
+    const db = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8')); console.log("Users:", db.users.map(u => u.email));
     
     if (db.users.find(u => u.email === email)) {
         return res.status(400).json({ success: false, message: "Email already exists" });
@@ -159,8 +160,9 @@ app.post('/api/register', (req, res) => {
 });
 
 app.post('/api/login', (req, res) => {
+    console.log("Using DB file:", DB_PATH);
     const { email, password, role } = req.body;
-    const db = JSON.parse(fs.readFileSync(DB_PATH));
+    const db = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8')); console.log("Users:", db.users.map(u => u.email));
     const user = db.users.find(u => u.email === email && u.role === role);
     
     if (user && bcrypt.compareSync(password, user.password)) {
@@ -175,7 +177,7 @@ app.post('/api/login', (req, res) => {
 
 app.post('/api/forgot-password/verify-mobile', (req, res) => {
     const { mobile } = req.body;
-    const db = JSON.parse(fs.readFileSync(DB_PATH));
+    const db = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8')); console.log("Users:", db.users.map(u => u.email));
     const user = db.users.find(u => u.mobile === mobile);
     
     if (!user) {
@@ -195,7 +197,7 @@ app.post('/api/forgot-password/verify-mobile', (req, res) => {
 
 app.post('/api/forgot-password/verify-crop', (req, res) => {
     const { userId, selectedCrop, sessionId } = req.body;
-    const db = JSON.parse(fs.readFileSync(DB_PATH));
+    const db = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8')); console.log("Users:", db.users.map(u => u.email));
     
     const session = verificationSessions.get(sessionId);
     if (!session || Date.now() > session.expiresAt) {
@@ -218,7 +220,7 @@ app.post('/api/forgot-password/verify-crop', (req, res) => {
 
 app.post('/api/reset-password', (req, res) => {
     const { userId, newPassword, sessionId } = req.body;
-    const db = JSON.parse(fs.readFileSync(DB_PATH));
+    const db = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8')); console.log("Users:", db.users.map(u => u.email));
     
     const session = verificationSessions.get(sessionId);
     if (!session || !session.verified || Date.now() > session.expiresAt) {
@@ -288,13 +290,13 @@ function getGeoForMandi(mandiName, fallbackState) {
 
 // Get all states
 app.get('/api/states', (req, res) => {
-    const db = JSON.parse(fs.readFileSync(DB_PATH));
+    const db = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8')); console.log("Users:", db.users.map(u => u.email));
     res.json({ success: true, states: Object.keys(db.mandiPrices) });
 });
 
 // Get prices (Integrated with Data.gov.in Agmarknet API)
 app.get('/api/prices/:state/:crop', async (req, res) => {
-    const db = JSON.parse(fs.readFileSync(DB_PATH));
+    const db = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8')); console.log("Users:", db.users.map(u => u.email));
     const { state, crop } = req.params;
     
     const cacheKey = `${state}_${crop}`;
@@ -375,7 +377,7 @@ app.get('/api/prices/:state/:crop', async (req, res) => {
 
 // Get Historical Trends Data
 app.get('/api/trends/:state/:crop', (req, res) => {
-    const db = JSON.parse(fs.readFileSync(DB_PATH));
+    const db = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8')); console.log("Users:", db.users.map(u => u.email));
     const { state, crop } = req.params;
     
     // In a real scenario, this fetches from Data.gov.in historic sets.
@@ -412,7 +414,7 @@ app.get('/api/trends/:state/:crop', (req, res) => {
 
 app.post('/api/update-price', (req, res) => {
     const { state, mandi, crop, newPrice, editorName } = req.body;
-    const db = JSON.parse(fs.readFileSync(DB_PATH));
+    const db = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8')); console.log("Users:", db.users.map(u => u.email));
     const oldPrice = db.mandiPrices[state][mandi][crop];
     db.mandiPrices[state][mandi][crop] = newPrice;
     db.lastUpdated = new Date().toISOString();
@@ -423,7 +425,7 @@ app.post('/api/update-price', (req, res) => {
 });
 
 app.get('/api/history', (req, res) => {
-    const db = JSON.parse(fs.readFileSync(DB_PATH));
+    const db = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8')); console.log("Users:", db.users.map(u => u.email));
     res.json({ success: true, history: db.priceUpdateHistory });
 });
 
