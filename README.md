@@ -10,29 +10,39 @@ The main objective of this project is to:
 Provide farmers with real-time market information
 Help them decide when to sell crops
 Improve accessibility using simple UI and voice support
+
 🖼️ System Screenshots
+
 Home Page
 <img src="images/home.png" width="600">
-Farmer Dashboard
+
+Farmer1
 <img src="images/farmer1.png" width="600">
-Market Price View
+
+Farmer2
 <img src="images/farmer2.png" width="600">
-Weather Information
+
+Farmer3
 <img src="images/farmer3.png" width="600">
-Sell Decision Signals
+
+Farmer4
 <img src="images/farmer4.png" width="600">
+
 Admin / Editor Panel
 <img src="images/editor.png" width="600">
+
 🚀 Features
 Displays current mandi (market) prices
 Provides basic weather updates
 Shows simple sell suggestions (Sell / Wait / Hold)
 Includes voice assistance in English and Hindi
 Designed with a simple and user-friendly interface
+
 🛠️ Technology Stack
 Frontend: HTML, CSS, JavaScript
 Backend: Node.js, Express.js
 Database: MongoDB
+
 ⚙️ Installation and Setup
 Step 1: Clone the Repository
 git clone https://github.com/gnikhilm111-ctrl/Farmer-Market-Aggregator-with-AI.git
@@ -52,11 +62,14 @@ npm run dev
 Step 3: Frontend Setup
 Open the frontend folder
 Run index.html in any web browser
+
 👨‍🌾 Usage
+
 Register or log in to the system
 View crop prices in different markets
 Check weather conditions
 Follow the suggested action (Sell / Wait / Hold)
+
 📂 Project Structure
 project-folder/
 │── frontend/
