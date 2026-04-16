@@ -373,7 +373,7 @@
     </div>
 
     <script>
-       const API_URL = 'https://kisan-setu-backend-ai.onrender.com/api';
+       const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') ? 'http://localhost:5000/api' : 'https://kisan-setu-backend-ai.onrender.com/api';
         const ADMIN_SECRET_CODE = 'ADMIN123';
         let currentLanguage = 'english';
 
@@ -506,6 +506,12 @@
                 alert(currentLanguage === 'hindi' ? "कृपया सभी फ़ील्ड भरें" : "Please fill all fields");
                 return;
             }
+
+            const loginBtn = document.getElementById('loginBtn');
+            const originalText = loginBtn.innerHTML;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + (currentLanguage === 'hindi' ? "लॉगिन हो रहा है..." : "Logging in...");
+            loginBtn.style.opacity = '0.7';
+            loginBtn.disabled = true;
             
             try {
                 const response = await fetch(`${API_URL}/login`, {
@@ -529,7 +535,12 @@
                     alert(data.message || (currentLanguage === 'hindi' ? "गलत क्रेडेंशियल!" : "Invalid credentials!"));
                 }
             } catch (error) {
-                alert(currentLanguage === 'hindi' ? "सर्वर त्रुटि! सुनिश्चित करें कि बैकएंड पोर्ट 5000 पर चल रहा है" : "Server error! Make sure backend is running on port 5000");
+                console.error(error);
+                alert(currentLanguage === 'hindi' ? "लॉगिन विफल रहा! यदि दूरस्थ सर्वर बंद है, तो कृपया 1-2 मिनट प्रतीक्षा करें और पुनः प्रयास करें।" : "Server error or timeout! If hitting remote server, please wait 1 minute for it to wake up and try again.");
+            } finally {
+                loginBtn.innerHTML = originalText;
+                loginBtn.style.opacity = '1';
+                loginBtn.disabled = false;
             }
         }
 
@@ -555,6 +566,12 @@
                 }
             }
             
+            const registerBtn = document.getElementById('registerBtn');
+            const originalText = registerBtn.innerHTML;
+            registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + (currentLanguage === 'hindi' ? "पंजीकरण हो रहा है..." : "Registering...");
+            registerBtn.style.opacity = '0.7';
+            registerBtn.disabled = true;
+
             try {
                 const response = await fetch(`${API_URL}/register`, {
                     method: 'POST',
@@ -572,7 +589,11 @@
                     alert(data.message);
                 }
             } catch (error) {
-                alert(currentLanguage === 'hindi' ? "सर्वर त्रुटि!" : "Server error!");
+                alert(currentLanguage === 'hindi' ? "सर्वर त्रुटि! यदि दूरस्थ सर्वर बंद है तो कुछ मिनट प्रतीक्षा करें।" : "Server error! If hitting remote server, wait a minute for it to wake up.");
+            } finally {
+                registerBtn.innerHTML = originalText;
+                registerBtn.style.opacity = '1';
+                registerBtn.disabled = false;
             }
         }
 

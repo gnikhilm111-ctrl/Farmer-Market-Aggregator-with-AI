@@ -1,71 +1,73 @@
-# 🌾 KisanSetu: AI-Powered Farmer Market Aggregator
+🌾 KisanSetu – Farmer Market Support System
 
-**KisanSetu** is a dedicated agricultural market platform built specifically to empower farmers. By combining real-time mandi prices, hyper-local weather advisories, and an AI-driven traffic light signal system, KisanSetu helps farmers make optimal decisions about when and where to sell their crops. 
+KisanSetu is a web-based application developed to assist farmers in making better decisions regarding crop sales.
+The platform provides market prices, weather information, and basic selling suggestions in a simple and accessible format.
 
-Designed with accessibility primarily in mind, the platform uses visual indicators and **native bilingual voice outputs** to ensure that farmers of all literacy levels can instantly understand complex market data.
+📌 Objective
 
-![KisanSetu Features](https://img.shields.io/badge/Status-Live-success.svg) ![Language Support](https://img.shields.io/badge/Language-English%20%7C%20Hindi-blue)
+The main objective of this project is to:
 
----
+Provide farmers with real-time market information
+Help them decide when to sell crops
+Improve accessibility using simple UI and voice support
+🖼️ System Screenshots
+Home Page
+<img src="images/home.png" width="600">
+Farmer Dashboard
+<img src="images/farmer1.png" width="600">
+Market Price View
+<img src="images/farmer2.png" width="600">
+Weather Information
+<img src="images/farmer3.png" width="600">
+Sell Decision Signals
+<img src="images/farmer4.png" width="600">
+Admin / Editor Panel
+<img src="images/editor.png" width="600">
+🚀 Features
+Displays current mandi (market) prices
+Provides basic weather updates
+Shows simple sell suggestions (Sell / Wait / Hold)
+Includes voice assistance in English and Hindi
+Designed with a simple and user-friendly interface
+🛠️ Technology Stack
+Frontend: HTML, CSS, JavaScript
+Backend: Node.js, Express.js
+Database: MongoDB
+⚙️ Installation and Setup
+Step 1: Clone the Repository
+git clone https://github.com/gnikhilm111-ctrl/Farmer-Market-Aggregator-with-AI.git
+Step 2: Backend Setup
+cd backend
+npm install
 
-## 🚀 Key Features
+Create a .env file:
 
-*   🚦 **AI Traffic Light “Sell Signals”:** Analyzes current crop prices against a 7-day moving average and presents a `Green (Sell Now)`, `Yellow (Wait)`, or `Red (Hold)` visual indicator for easy decision-making.
-*   🔊 **Bilingual Voice Advisories:** Uses the native browser SpeechSynthesis API to read out market advice and weather tips out loud in both **English** and **Hindi**.
-*   🌦️ **Hyper-Local Weather Insights:** Integrates with the OpenWeatherMap API to provide district-level temperature and farming advisories on the main dashboard.
-*   📊 **Real-Time Mandi Aggregation:** Displays live crop prices, highlights the highest competitive price in the state, and shows historical 7-day trend charts.
-*   📱 **Low-Literacy & Mobile First:** No typing required. A simple point-and-click UI built with big buttons and color-coded information.
+PORT=5000
+MONGODB_URI=your_mongodb_connection_string
+OPENWEATHER_API_KEY=your_api_key
 
----
+Run the server:
 
-## 🛠️ Technology Stack
+npm run dev
+Step 3: Frontend Setup
+Open the frontend folder
+Run index.html in any web browser
+👨‍🌾 Usage
+Register or log in to the system
+View crop prices in different markets
+Check weather conditions
+Follow the suggested action (Sell / Wait / Hold)
+📂 Project Structure
+project-folder/
+│── frontend/
+│── backend/
+│── images/
+│── README.md
+📝 Conclusion
 
-*   **Frontend:** Vanilla HTML5, CSS3, and JavaScript (Hosted on GitHub Pages)
-*   **Backend API:** Node.js, Express.js (Hosted on Render)
-*   **Database:** MongoDB Atlas (Mongoose ODM)
-*   **Data APIs:** OpenWeatherMap API, Native Web Speech API
+KisanSetu is a basic but effective system aimed at supporting farmers with essential information.
+It focuses on simplicity and usability, making it suitable for users with minimal technical knowledge.
 
----
+👤 Author
 
-## ⚙️ Running Locally
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/gnikhilm111-ctrl/Farmer-Market-Aggregator-with-AI.git
-   cd Farmer-Market-Aggregator-with-AI
-   ```
-
-2. **Backend Setup:**
-   * Navigate to the backend directory:
-     ```bash
-     cd backend
-     npm install
-     ```
-   * Create a `.env` file in the `backend` directory and add your credentials:
-     ```env
-     PORT=5000
-     MONGODB_URI=your_mongodb_cluster_connection_string
-     OPENWEATHER_API_KEY=your_openweathermap_api_key
-     ```
-   * Start the development server:
-     ```bash
-     npm run dev
-     ```
-
-3. **Frontend Setup:**
-   * No complex build steps required. Simply open `frontend/index.html` in your favorite modern browser or serve it using a simple live server (like VS Code Live Server).
-
----
-
-## 👨‍🌾 App Walkthrough
-
-1. **Login Page:** Farmers can log in or register with basic details. All sessions are persistent. 
-2. **Dashboard:**
-   * Top card displays real-time weather alongside a farming tip. (Press the speaker icon to listen!)
-   * The "AI Market Signals" horizontal scroll bar assesses all major crops in your state and advises on market timing.
-   * "Select Crop" and "Sort By" allow for dynamic price filtering, visualizing market trends via a Chart.js historical line graph.
-
----
-
-## 📝 License
-This project is open-source and free to be adapted to help agricultural communities globally.
+Gonemoni Nikhil

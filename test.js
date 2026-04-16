@@ -1,138 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KisanSetu - Farmer Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Poppins', sans-serif; background: #f5f7fa; }
-        .header { background: linear-gradient(135deg, #1e3a2f 0%, #2d6a4f 100%); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
-        .logo { font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
-        .user-info { display: flex; align-items: center; gap: 20px; background: rgba(255,255,255,0.2); padding: 8px 20px; border-radius: 50px; }
-        .logout-btn { background: #d62828; padding: 8px 20px; border-radius: 25px; cursor: pointer; transition: 0.3s; }
-        .logout-btn:hover { background: #b91c1c; }
-        .lang-toggle { background: #ffd166; color: #1e3a2f; padding: 8px 20px; border-radius: 25px; cursor: pointer; font-weight: 600; border: none; font-family: 'Poppins', sans-serif; }
-        .lang-toggle:hover { background: #ffc107; }
-        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
-        .welcome-banner { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 20px; margin-bottom: 2rem; }
-        .state-selector { background: white; padding: 1.5rem; border-radius: 20px; margin-bottom: 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .selector-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 1rem; color: #1e3a2f; }
-        .state-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; }
-        .state-card { padding: 1rem; background: #f8f9fa; border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.3s; border: 2px solid transparent; }
-        .state-card:hover { transform: translateY(-3px); background: #e9ecef; }
-        .state-card.active { background: linear-gradient(135deg, #2d6a4f 0%, #1e3a2f 100%); color: white; border-color: #ffd166; }
-        .state-symbol { font-size: 2rem; margin-bottom: 8px; }
-        .filters { background: white; padding: 1.5rem; border-radius: 20px; margin-bottom: 2rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; }
-        .filter-group { flex: 1; min-width: 180px; }
-        .filter-group label { display: block; font-weight: 500; margin-bottom: 0.5rem; color: #555; }
-        select, input { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 12px; font-family: 'Poppins', sans-serif; }
-        .btn-primary { background: #2d6a4f; color: white; padding: 12px 25px; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; }
-        .market-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
-        .market-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.07); transition: transform 0.3s; }
-        .market-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        .card-header { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 1rem 1.5rem; border-bottom: 3px solid #2d6a4f; }
-        .market-name { font-weight: 700; font-size: 1.1rem; color: #1e3a2f; }
-        .card-body { padding: 1.5rem; }
-        .price { font-size: 2rem; font-weight: 800; color: #d97706; margin-bottom: 1rem; }
-        .detail-row { display: flex; justify-content: space-between; margin-bottom: 10px; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
-        .best-badge { background: #ffd166; color: #1e3a2f; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; display: inline-block; }
-        .chart-section { background: white; padding: 1.5rem; border-radius: 20px; margin-top: 2rem; }
-        .last-updated { font-size: 0.75rem; color: #999; text-align: center; margin-top: 1rem; }
-        .refresh-indicator { position: fixed; bottom: 20px; right: 20px; background: #2d6a4f; color: white; padding: 10px 15px; border-radius: 50px; font-size: 0.8rem; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-        .loading-spinner { text-align: center; padding: 3rem; }
-        
-        /* AI Features Styles */
-        .weather-card { padding: 1.5rem; border-radius: 20px; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; color: white; transition: all 0.3s; flex-wrap: wrap; }
-        .weather-card.normal { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
-        .weather-card.rain { background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%); }
-        .weather-card.hot { background: linear-gradient(135deg, #FF416C 0%, #FF4B2B 100%); }
-        .weather-card.cold { background: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%); }
-        .weather-card.clear { background: linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%); }
-        .weather-info { display: flex; align-items: center; gap: 1rem; }
-        .weather-temp { font-size: 2.5rem; font-weight: 700; line-height: 1; }
-        .weather-icon img { width: 60px; height: 60px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
-        .advisory-text { flex: 1; font-size: 1.1rem; font-weight: 500; min-width: 200px; border-left: 2px solid rgba(255,255,255,0.3); padding-left: 1rem; }
-        .speak-btn { background: rgba(255,255,255,0.2); border: 2px solid white; color: white; width: 50px; height: 50px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; flex-shrink: 0; }
-        .speak-btn:hover { background: white; color: #333; transform: scale(1.1); }
-        .speak-btn.playing { animation: pulse 1s infinite; background: white; color: #ff0055; }
 
-        .signals-container { margin-bottom: 2rem; }
-        .signals-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 1rem; color: #1e3a2f; display: flex; align-items: center; gap: 10px; }
-        .signal-grid { display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 1rem; scrollbar-width: none; }
-        .signal-grid::-webkit-scrollbar { display: none; }
-        .signal-card { min-width: 250px; background: white; border-radius: 20px; padding: 1.5rem; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-top: 5px solid; position: relative; }
-        .signal-card.green { border-color: #06d6a0; }
-        .signal-card.yellow { border-color: #ffd166; }
-        .signal-card.red { border-color: #ef476f; }
-        .signal-circle { width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 700; color: white; }
-        .signal-card.green .signal-circle { background: #06d6a0; box-shadow: 0 0 20px rgba(6, 214, 160, 0.4); }
-        .signal-card.yellow .signal-circle { background: #ffd166; color: #333; }
-        .signal-card.red .signal-circle { background: #ef476f; }
-        .signal-crop { font-size: 1.2rem; font-weight: 700; color: #333; margin-bottom: 0.5rem; }
-        .signal-price { font-size: 1.5rem; font-weight: 800; color: #1e3a2f; }
-        .signal-action { font-size: 1.1rem; font-weight: 600; margin-top: 0.5rem; }
-        .signal-card.green .signal-action { color: #06d6a0; }
-        .signal-card.yellow .signal-action { color: #d97706; }
-        .signal-card.red .signal-action { color: #ef476f; }
-        .signal-speak { position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 1.2rem; color: #aaa; cursor: pointer; transition: 0.3s; }
-        .signal-speak:hover { color: #333; }
-        
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.7); } 70% { box-shadow: 0 0 0 10px rgba(255,255,255,0); } 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); } }
-
-        @media (max-width: 768px) { .container { padding: 1rem; } .market-grid { grid-template-columns: 1fr; } .advisory-text { border-left: none; padding-left: 0; border-top: 2px solid rgba(255,255,255,0.3); padding-top: 1rem; text-align: center; } .weather-card { justify-content: center; text-align: center; } }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <div class="logo"><i class="fas fa-seedling"></i><span id="appTitle">KisanSetu - Farmer Portal</span></div>
-        <div style="display: flex; gap: 10px;">
-            <button class="lang-toggle" onclick="toggleLanguage()">
-                <i class="fas fa-language"></i> <span id="langBtnText">हिंदी</span>
-            </button>
-            <div class="user-info"><i class="fas fa-user"></i><span id="userName">Loading...</span><div class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> <span id="logoutText">Logout</span></div></div>
-        </div>
-    </div>
-
-    <div class="container">
-        <div class="welcome-banner">
-            <h2><i class="fas fa-hand-peace"></i> <span id="welcomeMsg">Namaste</span>, <span id="welcomeName"></span>!</h2>
-            <p id="welcomeDesc">Find the best mandi price for your crops. Prices updated in real-time by government editors.</p>
-        </div>
-
-        <div id="weatherContainer"></div>
-
-        <div class="signals-container">
-            <div class="selector-title"><i class="fas fa-broadcast-tower"></i> <span id="signalsTitle">AI Market Signals</span></div>
-            <div id="signalsGrid" class="signal-grid">
-                <div class="loading-spinner" style="padding: 1rem;"><i class="fas fa-spinner fa-spin"></i> Loading AI signals...</div>
-            </div>
-        </div>
-
-        <div class="state-selector">
-            <div class="selector-title"><i class="fas fa-map-india"></i> <span id="selectStateTitle">Select Your State</span></div>
-            <div class="state-grid" id="stateGrid"></div>
-        </div>
-
-        <div class="filters">
-            <div class="filter-group"><label><i class="fas fa-carrot"></i> <span id="cropLabel">Select Crop</span></label><select id="cropSelect"></select></div>
-            <div class="filter-group"><label><i class="fas fa-sort-amount-down"></i> <span id="sortLabel">Sort By</span></label><select id="sortSelect"><option value="price" id="sortPriceOpt">Highest Price</option><option value="name" id="sortNameOpt">Mandi Name</option><option value="distance" id="sortDistOpt">Nearest Distance</option></select></div>
-            <button class="btn-primary" onclick="fetchPrices()"><i class="fas fa-search"></i> <span id="findBtn">Find Best Prices</span></button>
-        </div>
-
-        <div id="marketList" class="market-grid"><div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> <span id="loadingText">Loading market prices...</span></div></div>
-
-        <div class="chart-section"><h3><i class="fas fa-chart-line"></i> <span id="trendCropName">Wheat</span> - <span id="trendTitle">7 Day Price Trend</span></h3><canvas id="priceChart"></canvas></div>
-        <div class="api-badge" id="apiBadge" style="text-align: center; margin-top: 2rem; color: #2d6a4f; font-weight: 600; padding: 10px; background: #e9ecef; border-radius: 12px;"><i class="fas fa-check-circle"></i> Sourced from Agmarknet via Data.gov.in API</div>
-        <div class="last-updated" id="lastUpdated"></div>
-    </div>
-    <div class="refresh-indicator" onclick="fetchPrices()"><i class="fas fa-sync-alt"></i> <span id="refreshText">Refresh Prices</span></div>
-
-    <script>
-        const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:') ? 'http://localhost:5000/api' : 'https://kisan-setu-backend-ai.onrender.com/api';
+        const API_URL = 'https://kisan-setu-backend-ai.onrender.com/api';
         let currentUser = null;
         let currentState = "";
         let priceChart = null;
@@ -622,8 +489,8 @@
                             signalTextHi = `${cropTitle} का दाम ${s.bestPrice} रूपये है। दाम गिरे हुए हैं, अभी मत बेचो।`;
                             signalTextEn = `The price of ${cropTitle} is ${s.bestPrice} rupees. Prices are low, don't sell yet.`;
                         } else {
-                            signalTextHi = `${cropTitle} का दाम ${s.bestPrice} रूपये है। दाम सामान्य हैं, इसलिए अभी रुकना बेहतर है।`;
-                            signalTextEn = `The price of ${cropTitle} is ${s.bestPrice} rupees. Prices are normal, so it is better to wait.`;
+                            signalTextHi = `${cropTitle} का दाम ${s.bestPrice} रूपये है। दाम सामान्य हैं।`;
+                            signalTextEn = `The price of ${cropTitle} is ${s.bestPrice} rupees. Prices are normal, you can hold or sell.`;
                         }
                         
                         const unitInfo = getUnitInfo(s.crop);
@@ -751,6 +618,4 @@
         }
         
         init();
-    </script>
-</body>
-</html>
+    
