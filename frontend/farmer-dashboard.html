@@ -387,11 +387,34 @@
         }
 
         async function loadUser() {
-            const userStr = localStorage.getItem('currentUser');
-            if (!userStr) { window.location.href = 'index.html'; return; }
-            currentUser = JSON.parse(userStr);
-            document.getElementById('userName').innerText = currentUser.name;
-            document.getElementById('welcomeName').innerText = currentUser.name.split(' ')[0];
+            try {
+                const userStr = localStorage.getItem('currentUser');
+                if (!userStr || userStr === 'undefined' || userStr === 'null') { 
+                    window.location.replace('index.html'); 
+                    return false; 
+                }
+                
+                currentUser = JSON.parse(userStr);
+                
+                if (!currentUser || !currentUser.name) {
+                    localStorage.removeItem('currentUser');
+                    window.location.replace('index.html');
+                    return false;
+                }
+                
+                const userNameEl = document.getElementById('userName');
+                if (userNameEl) userNameEl.innerText = currentUser.name;
+                
+                const welcomeNameEl = document.getElementById('welcomeName');
+                if (welcomeNameEl) welcomeNameEl.innerText = currentUser.name.split(' ')[0];
+                
+                return true;
+            } catch (error) {
+                console.error("Auth error:", error);
+                localStorage.removeItem('currentUser');
+                window.location.replace('index.html');
+                return false;
+            }
         }
 
         async function loadStates() {
@@ -714,7 +737,9 @@
         }
 
         async function init() {
-            await loadUser();
+            const isAuthenticated = await loadUser();
+            if (!isAuthenticated) return; // Halt init until redirect finishes
+
             updateUILanguage();
             await loadStates();
             await loadCrops();
