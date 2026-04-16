@@ -10,14 +10,32 @@ app.use(cors());
 app.use(express.json());
 
 // ============ MONGODB CONNECTION ============
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/kisansetu?retryWrites=true&w=majority';
+const MONGODB_URI = process.env.MONGODB_URI || '';
 
-mongoose.connect(MONGODB_URI)
-    .then(() => console.log('✅ Connected to MongoDB Atlas'))
-    .catch(err => {
-        console.error('❌ MongoDB connection error:', err.message);
-        console.error('Please set the MONGODB_URI environment variable in Render dashboard.');
-    });
+console.log('🔍 MONGODB_URI env var is:', MONGODB_URI ? 'SET (' + MONGODB_URI.replace(/\/\/.*@/, '//***:***@') + ')' : 'NOT SET');
+
+if (!MONGODB_URI) {
+    console.error('❌ MONGODB_URI environment variable is NOT SET!');
+    console.error('Please set it in your Render dashboard under Environment tab.');
+} else {
+    mongoose.connect(MONGODB_URI, {
+        serverSelectionTimeoutMS: 10000,
+        connectTimeoutMS: 10000
+    })
+        .then(() => console.log('✅ Connected to MongoDB Atlas successfully!'))
+        .catch(err => {
+            console.error('❌ MongoDB connection FAILED!');
+            console.error('Error type:', err.name);
+            console.error('Error message:', err.message);
+            if (err.message.includes('ENOTFOUND')) {
+                console.error('→ Cluster hostname not found. Check your connection string.');
+            } else if (err.message.includes('authentication') || err.message.includes('auth')) {
+                console.error('→ Wrong username or password. Check your MongoDB Atlas database user.');
+            } else if (err.message.includes('IP') || err.message.includes('whitelist')) {
+                console.error('→ IP not whitelisted. Go to MongoDB Atlas → Network Access → Allow 0.0.0.0/0');
+            }
+        });
+}
 
 // ============ MONGOOSE SCHEMAS ============
 
