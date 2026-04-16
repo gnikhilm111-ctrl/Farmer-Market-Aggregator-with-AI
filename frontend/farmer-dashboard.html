@@ -44,7 +44,46 @@
         .last-updated { font-size: 0.75rem; color: #999; text-align: center; margin-top: 1rem; }
         .refresh-indicator { position: fixed; bottom: 20px; right: 20px; background: #2d6a4f; color: white; padding: 10px 15px; border-radius: 50px; font-size: 0.8rem; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
         .loading-spinner { text-align: center; padding: 3rem; }
-        @media (max-width: 768px) { .container { padding: 1rem; } .market-grid { grid-template-columns: 1fr; } }
+        
+        /* AI Features Styles */
+        .weather-card { padding: 1.5rem; border-radius: 20px; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; color: white; transition: all 0.3s; flex-wrap: wrap; }
+        .weather-card.normal { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+        .weather-card.rain { background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%); }
+        .weather-card.hot { background: linear-gradient(135deg, #FF416C 0%, #FF4B2B 100%); }
+        .weather-card.cold { background: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%); }
+        .weather-card.clear { background: linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%); }
+        .weather-info { display: flex; align-items: center; gap: 1rem; }
+        .weather-temp { font-size: 2.5rem; font-weight: 700; line-height: 1; }
+        .weather-icon img { width: 60px; height: 60px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+        .advisory-text { flex: 1; font-size: 1.1rem; font-weight: 500; min-width: 200px; border-left: 2px solid rgba(255,255,255,0.3); padding-left: 1rem; }
+        .speak-btn { background: rgba(255,255,255,0.2); border: 2px solid white; color: white; width: 50px; height: 50px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; flex-shrink: 0; }
+        .speak-btn:hover { background: white; color: #333; transform: scale(1.1); }
+        .speak-btn.playing { animation: pulse 1s infinite; background: white; color: #ff0055; }
+
+        .signals-container { margin-bottom: 2rem; }
+        .signals-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 1rem; color: #1e3a2f; display: flex; align-items: center; gap: 10px; }
+        .signal-grid { display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 1rem; scrollbar-width: none; }
+        .signal-grid::-webkit-scrollbar { display: none; }
+        .signal-card { min-width: 250px; background: white; border-radius: 20px; padding: 1.5rem; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-top: 5px solid; position: relative; }
+        .signal-card.green { border-color: #06d6a0; }
+        .signal-card.yellow { border-color: #ffd166; }
+        .signal-card.red { border-color: #ef476f; }
+        .signal-circle { width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 700; color: white; }
+        .signal-card.green .signal-circle { background: #06d6a0; box-shadow: 0 0 20px rgba(6, 214, 160, 0.4); }
+        .signal-card.yellow .signal-circle { background: #ffd166; color: #333; }
+        .signal-card.red .signal-circle { background: #ef476f; }
+        .signal-crop { font-size: 1.2rem; font-weight: 700; color: #333; margin-bottom: 0.5rem; }
+        .signal-price { font-size: 1.5rem; font-weight: 800; color: #1e3a2f; }
+        .signal-action { font-size: 1.1rem; font-weight: 600; margin-top: 0.5rem; }
+        .signal-card.green .signal-action { color: #06d6a0; }
+        .signal-card.yellow .signal-action { color: #d97706; }
+        .signal-card.red .signal-action { color: #ef476f; }
+        .signal-speak { position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 1.2rem; color: #aaa; cursor: pointer; transition: 0.3s; }
+        .signal-speak:hover { color: #333; }
+        
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.7); } 70% { box-shadow: 0 0 0 10px rgba(255,255,255,0); } 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); } }
+
+        @media (max-width: 768px) { .container { padding: 1rem; } .market-grid { grid-template-columns: 1fr; } .advisory-text { border-left: none; padding-left: 0; border-top: 2px solid rgba(255,255,255,0.3); padding-top: 1rem; text-align: center; } .weather-card { justify-content: center; text-align: center; } }
     </style>
 </head>
 <body>
@@ -62,6 +101,15 @@
         <div class="welcome-banner">
             <h2><i class="fas fa-hand-peace"></i> <span id="welcomeMsg">Namaste</span>, <span id="welcomeName"></span>!</h2>
             <p id="welcomeDesc">Find the best mandi price for your crops. Prices updated in real-time by government editors.</p>
+        </div>
+
+        <div id="weatherContainer"></div>
+
+        <div class="signals-container">
+            <div class="selector-title"><i class="fas fa-broadcast-tower"></i> <span id="signalsTitle">AI Market Signals</span></div>
+            <div id="signalsGrid" class="signal-grid">
+                <div class="loading-spinner" style="padding: 1rem;"><i class="fas fa-spinner fa-spin"></i> Loading AI signals...</div>
+            </div>
         </div>
 
         <div class="state-selector">
@@ -137,6 +185,10 @@
             lastUpdated: "अंतिम अपडेट",
             estTransport: "अनुमानित परिवहन लागत",
             perQuintal: "/क्विंटल",
+            signalsTitle: "एआई बाजार संकेत (AI Market Signals)",
+            sellNowText: "अभी बेचो",
+            holdText: "रुको",
+            dontSellText: "अभी मत बेचो",
             marketNames: {
                 "Lucknow Mandi": "लखनऊ मंडी",
                 "Agra Mandi": "आगरा मंडी",
@@ -262,6 +314,8 @@
                 document.getElementById('loadingText').innerHTML = hindiText.loadingText;
                 document.getElementById('trendTitle').innerHTML = hindiText.trendTitle;
                 document.getElementById('refreshText').innerHTML = hindiText.refreshText;
+                const signalsTitleEl = document.getElementById('signalsTitle');
+                if (signalsTitleEl) signalsTitleEl.innerHTML = hindiText.signalsTitle;
             } else {
                 document.getElementById('appTitle').innerHTML = "KisanSetu - Farmer Portal";
                 document.getElementById('logoutText').innerHTML = "Logout";
@@ -277,6 +331,13 @@
                 document.getElementById('loadingText').innerHTML = "Loading market prices...";
                 document.getElementById('trendTitle').innerHTML = "7 Day Price Trend";
                 document.getElementById('refreshText').innerHTML = "Refresh Prices";
+                const signalsTitleEl = document.getElementById('signalsTitle');
+                if (signalsTitleEl) signalsTitleEl.innerHTML = "AI Market Signals";
+            }
+            // Will re-render weather and signals if state changes
+            if(currentUser) {
+                renderWeather();
+                fetchSellSignals();
             }
         }
 
@@ -303,6 +364,26 @@
                 return hindiText.crops[cropId];
             }
             return cropOriginalName;
+        }
+
+        // Voice output using SpeechSynthesis
+        function speakText(textEn, textHi, btnElement) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel(); // Stop any current speech
+            
+            const textToSpeak = currentLanguage === 'hindi' ? textHi : textEn;
+            const lang = currentLanguage === 'hindi' ? 'hi-IN' : 'en-IN';
+            
+            const utterance = new SpeechSynthesisUtterance(textToSpeak);
+            utterance.lang = lang;
+            
+            if (btnElement) {
+                btnElement.classList.add('playing');
+                utterance.onend = () => { btnElement.classList.remove('playing'); };
+                utterance.onerror = () => { btnElement.classList.remove('playing'); };
+            }
+            
+            window.speechSynthesis.speak(utterance);
         }
 
         async function loadUser() {
@@ -359,6 +440,7 @@
                 }
             });
             fetchPrices();
+            fetchSellSignals();
         }
 
         function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -458,6 +540,99 @@
             }).join('');
         }
 
+        // AI Feature: Voice Weather Advisory
+        async function renderWeather() {
+            if (!currentUser || !currentUser.district) return;
+            const container = document.getElementById('weatherContainer');
+            try {
+                const response = await fetch(`${API_URL}/weather/${currentUser.district}`);
+                const data = await response.json();
+                if (data.success) {
+                    const advisoryText = currentLanguage === 'hindi' ? data.advisoryHi : data.advisoryEn;
+                    const speechTextHi = `आज ${data.district} का तापमान ${data.temp} डिग्री है। ${data.advisoryHi}`;
+                    const speechTextEn = `Today's temperature in ${data.district} is ${data.temp} degrees. ${data.advisoryEn}`;
+                    
+                    container.innerHTML = `
+                        <div class="weather-card ${data.theme}">
+                            <div class="weather-info">
+                                <div class="weather-icon"><img src="https://openweathermap.org/img/wn/${data.icon}@2x.png" alt="weather icon"></div>
+                                <div>
+                                    <div class="weather-temp">${data.temp}°C</div>
+                                    <div style="font-size: 0.9rem; opacity: 0.9;"><i class="fas fa-map-marker-alt"></i> ${data.district}</div>
+                                </div>
+                            </div>
+                            <div class="advisory-text">
+                                <i class="fas fa-leaf"></i> ${advisoryText}
+                            </div>
+                            <button class="speak-btn" onclick="speakText('${speechTextEn.replace(/'/g, '\\'')}', '${speechTextHi.replace(/'/g, '\\'')}', this)" title="Listen">
+                                <i class="fas fa-volume-up"></i>
+                            </button>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                console.error("Error fetching weather", err);
+            }
+        }
+
+        // AI Feature: Traffic Light Sell Signals
+        async function fetchSellSignals() {
+            if (!currentState) return;
+            const container = document.getElementById('signalsGrid');
+            try {
+                container.innerHTML = `<div class="loading-spinner" style="padding: 1rem;"><i class="fas fa-spinner fa-spin"></i> Loading AI signals...</div>`;
+                const response = await fetch(`${API_URL}/sell-signals/${currentState}`);
+                const data = await response.json();
+                
+                if (data.success && data.signals.length > 0) {
+                    container.innerHTML = data.signals.map(s => {
+                        const cropObj = cropsList.find(c => c.id === s.crop);
+                        const cropTitle = getTranslatedCrop(s.crop, cropObj ? cropObj.name : s.crop);
+                        const textDisplay = currentLanguage === 'hindi' ? s.textHi : s.textEn;
+                        
+                        let signalTextHi = "";
+                        let signalTextEn = "";
+                        if (s.signal === 'sell') {
+                            signalTextHi = `${cropTitle} का दाम ${s.bestPrice} रूपये है। दाम बढ़ रहे हैं, अभी बेचो!`;
+                            signalTextEn = `The price of ${cropTitle} is ${s.bestPrice} rupees. Prices are high, sell now!`;
+                        } else if (s.signal === 'hold') {
+                            signalTextHi = `${cropTitle} का दाम ${s.bestPrice} रूपये है। दाम गिरे हुए हैं, अभी मत बेचो।`;
+                            signalTextEn = `The price of ${cropTitle} is ${s.bestPrice} rupees. Prices are low, don't sell yet.`;
+                        } else {
+                            signalTextHi = `${cropTitle} का दाम ${s.bestPrice} रूपये है। दाम सामान्य हैं।`;
+                            signalTextEn = `The price of ${cropTitle} is ${s.bestPrice} rupees. Prices are normal, you can hold or sell.`;
+                        }
+                        
+                        const unitInfo = getUnitInfo(s.crop);
+                        const priceDisplay = (s.bestPrice / unitInfo.divisor).toLocaleString('en-IN');
+                        const unitSuffix = currentLanguage === 'hindi' ? unitInfo.labelHi : unitInfo.labelEn;
+                        
+                        let circleIcon = '<i class="fas fa-minus"></i>';
+                        if(s.color === 'green') circleIcon = '<i class="fas fa-check"></i>';
+                        if(s.color === 'red') circleIcon = '<i class="fas fa-times"></i>';
+
+                        return `
+                            <div class="signal-card ${s.color}">
+                                <button class="signal-speak" onclick="speakText('${signalTextEn.replace(/'/g, "\\'")}', '${signalTextHi.replace(/'/g, "\\'")}', this)" title="Listen">
+                                    <i class="fas fa-volume-up"></i>
+                                </button>
+                                <div class="signal-circle">${circleIcon}</div>
+                                <div class="signal-crop">${cropTitle}</div>
+                                <div class="signal-price">₹${priceDisplay}<span style="font-size: 0.8rem; font-weight: 500">${unitSuffix}</span></div>
+                                <div class="signal-action">${textDisplay}</div>
+                                <div style="font-size: 0.8rem; color: #777; margin-top: 5px;">${getTranslatedMandi(s.mandi)}</div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    container.innerHTML = `<div style="padding: 1rem; color: #777;">No active signals for ${currentState} right now.</div>`;
+                }
+            } catch (err) {
+                console.error("Error fetching signals", err);
+                container.innerHTML = ``;
+            }
+        }
+
         async function updateChart(cropId, cropName, state) {
             const ctx = document.getElementById('priceChart').getContext('2d');
             let labels = [];
@@ -545,6 +720,8 @@
             await loadCrops();
             requestLocation();
             await fetchPrices();
+            await renderWeather();
+            await fetchSellSignals();
             setInterval(fetchPrices, 60000);
         }
         

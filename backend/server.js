@@ -584,6 +584,139 @@ app.get('/api/crops', (req, res) => {
     res.json({ success: true, crops: crops.map(c => ({ id: c, name: cropNames[c] })) });
 });
 
+// AI Feature: Voice Weather + Farming Advisory
+app.get('/api/weather/:district', async (req, res) => {
+    try {
+        const { district } = req.params;
+        const apiKey = process.env.OPENWEATHER_API_KEY || "8ce30750de5eafe5690c030f7131e0d8";
+        
+        // Simple mapping for district to coordinate
+        const fallbackCoords = { lat: 26.8467, lng: 80.9462 }; // Lucknow
+        
+        let url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(district)}&appid=${apiKey}&units=metric`;
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.cod !== 200) {
+            // Fallback to Lucknow if district not found
+             const fallbackUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${fallbackCoords.lat}&lon=${fallbackCoords.lng}&appid=${apiKey}&units=metric`;
+             const fallbackResponse = await fetch(fallbackUrl);
+             const fallbackData = await fallbackResponse.json();
+             if (fallbackData.cod !== 200) throw new Error("Fallback failed");
+             data.main = fallbackData.main;
+             data.weather = fallbackData.weather;
+             data.name = fallbackData.name;
+        }
+
+        const temp = data.main.temp;
+        const condition = data.weather[0].main.toLowerCase();
+        
+        let advisoryHi = "";
+        let advisoryEn = "";
+        let theme = "normal";
+
+        if (condition.includes("rain") || condition.includes("drizzle")) {
+             advisoryHi = "बारिश हो रही है। सिंचाई न करें। जल निकासी सुनिश्चित करें।";
+             advisoryEn = "It is raining. Do not irrigate. Ensure water drainage.";
+             theme = "rain";
+        } else if (temp > 38) {
+             advisoryHi = `तापमान ${Math.round(temp)}°C है। बहुत गर्मी है, सिंचाई केवल शाम को करें।`;
+             advisoryEn = `Temperature is ${Math.round(temp)}°C. Very hot, irrigate only in the evening.`;
+             theme = "hot";
+        } else if (temp < 10) {
+              advisoryHi = `तापमान ${Math.round(temp)}°C है। ठंड से बचाव के लिए हल्की सिंचाई करें।`;
+              advisoryEn = `Temperature is ${Math.round(temp)}°C. Apply light irrigation to protect from cold.`;
+              theme = "cold";
+        } else {
+             advisoryHi = "मौसम साफ है। आप सामान्य खेती के काम कर सकते हैं।";
+             advisoryEn = "Weather is clear. You can proceed with normal farming activities.";
+             theme = "clear";
+        }
+
+        res.json({
+            success: true,
+            temp: Math.round(data.main.temp),
+            condition: condition,
+            district: data.name,
+            advisoryHi,
+            advisoryEn,
+            theme,
+            icon: data.weather[0].icon
+        });
+
+    } catch (error) {
+        console.error("Weather API error:", error);
+        res.json({
+            success: false,
+            message: "Weather data unavailable at the moment."
+        });
+    }
+});
+
+// AI Feature: Traffic Light Sell Signals
+app.get('/api/sell-signals/:state', async (req, res) => {
+    try {
+        const { state } = req.params;
+        const crops = ["wheat", "rice", "tomato", "onion", "potato", "chili", "brinjal", "maize"];
+        
+        const signals = [];
+        
+        for (const crop of crops) {
+            // Get all current prices for this crop in the state
+            const currentPrices = await MandiPrice.find({ state, crop });
+            if (currentPrices.length === 0) continue;
+            
+            // Find best price
+            currentPrices.sort((a,b) => b.price - a.price);
+            const bestPrice = currentPrices[0];
+            
+            // Get 7 day average
+            const histAgg = await MandiPrice.aggregate([
+                { $match: { state, crop } },
+                { $group: { _id: null, avgPrice: { $avg: "$price" } } }
+            ]);
+            
+            const avgPrice = histAgg.length > 0 ? histAgg[0].avgPrice : bestPrice.price;
+            
+            // Compute signal logic (8% threshold)
+            let signal = 'wait';
+            let color = 'yellow';
+            let textHi = 'रुको';
+            let textEn = 'Wait';
+            
+            if (bestPrice.price > avgPrice * 1.08) {
+                signal = 'sell';
+                color = 'green';
+                textHi = 'अभी बेचो!';
+                textEn = 'Sell Now!';
+            } else if (bestPrice.price < avgPrice * 0.92) {
+                signal = 'hold';
+                color = 'red';
+                textHi = 'अभी मत बेचो';
+                textEn = "Don't Sell";
+            }
+            
+            signals.push({
+                crop,
+                bestPrice: Math.round(bestPrice.price),
+                mandi: bestPrice.mandi,
+                signal,
+                color,
+                textHi,
+                textEn,
+                avgPrice: Math.round(avgPrice)
+            });
+        }
+        
+        res.json({ success: true, signals });
+        
+    } catch (e) {
+        console.error("Sell signals error:", e);
+        res.status(500).json({ success: false });
+    }
+});
+
 // Health check endpoint
 app.get('/api/health', async (req, res) => {
     try {
