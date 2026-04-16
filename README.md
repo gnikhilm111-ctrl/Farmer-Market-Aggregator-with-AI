@@ -14,22 +14,22 @@ Improve accessibility using simple UI and voice support
 🖼️ System Screenshots
 
 Home Page
-<img src="images/home.png" width="600">
+<img src="home.png" width="600">
 
 Farmer1
-<img src="images/farmer1.png" width="600">
+<img src="farmer1.png" width="600">
 
 Farmer2
-<img src="images/farmer2.png" width="600">
+<img src="farmer2.png" width="600">
 
 Farmer3
-<img src="images/farmer3.png" width="600">
+<img src="farmer3.png" width="600">
 
 Farmer4
-<img src="images/farmer4.png" width="600">
+<img src="farmer4.png" width="600">
 
 Admin / Editor Panel
-<img src="images/editor.png" width="600">
+<img src="editor.png" width="600">
 
 🚀 Features
 Displays current mandi (market) prices
@@ -74,8 +74,8 @@ Follow the suggested action (Sell / Wait / Hold)
 project-folder/
 │── frontend/
 │── backend/
-│── images/
 │── README.md
+
 📝 Conclusion
 
 KisanSetu is a basic but effective system aimed at supporting farmers with essential information.
